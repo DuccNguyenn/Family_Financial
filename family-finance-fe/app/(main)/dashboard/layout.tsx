@@ -27,11 +27,10 @@ const navItems = [
     name: "Báo cáo",
     href: "/dashboard/reports",
     icon: <ChartPieSlice size={24} />,
-    
   },
   {
     name: "Thành viên",
-    href: "/dashboard/members",
+    href: "/members",
     icon: <Users size={24} />,
     desktopOnly: true,
   },

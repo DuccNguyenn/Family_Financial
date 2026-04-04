@@ -20,3 +20,5 @@ Thumbs.db
 # Agent files
 .agent/
 skills/
+
+PRODUCT_BACKLOG.md

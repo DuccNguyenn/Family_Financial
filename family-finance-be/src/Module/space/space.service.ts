@@ -242,7 +242,7 @@ export class SpaceService {
     // Xóa khỏi memberIds của Space
     await this.spaceModel.updateOne(
       { _id: spaceId },
-      { $pull: { memberIds: new Types.ObjectId(memberId) } },
+      { $pull: { membersId: new Types.ObjectId(memberId) } },
     );
 
     // Reset spaceId + role của User về null
