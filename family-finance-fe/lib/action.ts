@@ -8,7 +8,8 @@ import {
   CreateCategoryDto,
   UpdateCategoryDto,
 } from "./category.api";
-import { IBackendRes, IIncome, GetIncomeDto, CreateIncomeDto, IExpense, GetExpenseDto, CreateExpenseDto } from "@/types";
+import { IBackendRes, IIncome, GetIncomeDto, CreateIncomeDto, IExpense, GetExpenseDto, CreateExpenseDto, IBudget, IBudgetListResponse, CreateBudgetDto, GetBudgetDto } from "@/types";
+
 
 const BE = process.env.NEXT_PUBLIC_BE_URL ?? "http://localhost:8081/api/";
 
@@ -478,3 +479,110 @@ export const removeMemberAction = async (memberId: string): Promise<IBackendRes<
     };
   }
 };
+
+// --- Ngân sách (Budget) ---
+
+// Lấy danh sách ngân sách theo tháng/năm
+export const getBudgetsAction = async (
+  query: GetBudgetDto,
+): Promise<IBackendRes<IBudgetListResponse>> => {
+  try {
+    const res = await sendRequestServer<IBudgetListResponse>({
+      url: `${BE}/budget`,
+      method: "GET",
+      token: await getToken(),
+      queryParams: query,
+    });
+    return { statusCode: 200, message: "Success", data: res };
+  } catch (error: any) {
+    console.error("[Action Error] getBudgetsAction:", error);
+    return { statusCode: 500, message: error.message || "Lỗi khi lấy ngân sách" };
+  }
+};
+
+// Lấy chi tiết một ngân sách
+export const getBudgetAction = async (
+  id: string,
+): Promise<IBackendRes<IBudget>> => {
+  try {
+    const res = await sendRequestServer<IBudget>({
+      url: `${BE}/budget/${id}`,
+      method: "GET",
+      token: await getToken(),
+    });
+    return { statusCode: 200, message: "Success", data: res };
+  } catch (error: any) {
+    console.error("[Action Error] getBudgetAction:", error);
+    return { statusCode: 500, message: error.message || "Lỗi khi lấy chi tiết ngân sách" };
+  }
+};
+
+// Tạo ngân sách mới (chỉ parent)
+export const createBudgetAction = async (
+  data: CreateBudgetDto,
+): Promise<IBackendRes<IBudget>> => {
+  try {
+    const res = await sendRequestServer<IBudget>({
+      url: `${BE}/budget`,
+      method: "POST",
+      token: await getToken(),
+      body: data,
+    });
+    return { statusCode: 200, message: "Success", data: res };
+  } catch (error: any) {
+    console.error("[Action Error] createBudgetAction:", error);
+    return { statusCode: 500, message: error.message || "Lỗi khi tạo ngân sách" };
+  }
+};
+
+// Cập nhật ngân sách (chỉ parent)
+export const updateBudgetAction = async (
+  id: string,
+  data: Partial<CreateBudgetDto>,
+): Promise<IBackendRes<IBudget>> => {
+  try {
+    const res = await sendRequestServer<IBudget>({
+      url: `${BE}/budget/${id}`,
+      method: "PATCH",
+      token: await getToken(),
+      body: data,
+    });
+    return { statusCode: 200, message: "Success", data: res };
+  } catch (error: any) {
+    console.error("[Action Error] updateBudgetAction:", error);
+    return { statusCode: 500, message: error.message || "Lỗi khi cập nhật ngân sách" };
+  }
+};
+
+// Xóa ngân sách (chỉ parent)
+export const deleteBudgetAction = async (
+  id: string,
+): Promise<IBackendRes<any>> => {
+  try {
+    const res = await sendRequestServer<any>({
+      url: `${BE}/budget/${id}`,
+      method: "DELETE",
+      token: await getToken(),
+    });
+    return { statusCode: 200, message: "Success", data: res };
+  } catch (error: any) {
+    console.error("[Action Error] deleteBudgetAction:", error);
+    return { statusCode: 500, message: error.message || "Lỗi khi xóa ngân sách" };
+  }
+};
+
+// --- Dashboard ---
+export const getDashboardSummaryAction = async (): Promise<IBackendRes<any>> => {
+  try {
+    const res = await sendRequestServer<any>({
+      url: `${BE}/dashboard/summary`,
+      method: "GET",
+      token: await getToken(),
+    });
+    return { statusCode: 200, message: "Success", data: res };
+  } catch (error: any) {
+    console.error("[Action Error] getDashboardSummaryAction:", error);
+    return { statusCode: 500, message: error.message || "Lỗi khi lấy dữ liệu tổng hợp" };
+  }
+};
+

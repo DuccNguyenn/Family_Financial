@@ -63,11 +63,16 @@ export default function TransactionPage() {
          setMobileDetailTransaction(null);
       }
       queryClient.invalidateQueries({ queryKey: ["transactions", activeTab] });
+      // Khi xóa expense, budget cần tính lại spentAmount ngay
+      if (activeTab === "expense") {
+        queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      }
     },
     onError: () => {
       toast.error("Lỗi kết nối đến máy chủ");
     },
   });
+
 
   const handleEdit = (transaction: IIncome) => {
     setEditTransaction(transaction);

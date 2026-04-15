@@ -25,10 +25,8 @@ export interface UpdateCategoryDto {
   type?: CategoryType;
 }
 
-
 const SERVER_URL =
   process.env.NEXT_PUBLIC_BE_URL ?? "http://localhost:8081/api/";
-
 
 export const getCategories = async (): Promise<ICategory[]> => {
   return sendRequest<ICategory[]>({

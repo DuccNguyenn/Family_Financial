@@ -14,8 +14,10 @@ import {
   GearSix,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
-import { logoutAction } from "@/lib/action";
+import { logoutAction, getCategoriesAction } from "@/lib/action";
 import { useAuthStore } from "@/store/auth.store";
+import { useQuery } from "@tanstack/react-query";
+import { AddTransactionModal } from "./transaction/_components/add-transaction-modal";
 
 const navItems = [
   { name: "Trang chủ", href: "/dashboard", icon: <House size={24} /> },
@@ -48,6 +50,19 @@ export default function DashboardLayout({
   const [showMobileDropdown, setShowMobileDropdown] = useState(false);
   const desktopRef = useRef<HTMLDivElement>(null);
   const mobileRef = useRef<HTMLDivElement>(null);
+  const { user, clearAuth } = useAuthStore();
+
+  // Nhanh Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { data: categoriesData } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const res = await getCategoriesAction();
+      return res?.data || [];
+    },
+  });
+  const categories = categoriesData?.data || categoriesData || [];
 
   const handleLogout = async () => {
     toast.success("Đang xử lý đăng xuất...", {
@@ -55,10 +70,10 @@ export default function DashboardLayout({
     });
     setShowDropdown(false);
     setShowMobileDropdown(false);
-    
+
     try {
       await logoutAction();
-    } catch(e) {}
+    } catch (e) {}
     useAuthStore.getState().clear();
     window.location.href = "/auth/login";
   };
@@ -89,7 +104,7 @@ export default function DashboardLayout({
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 flex-col w-64 bg-white dark:bg-[#122017] border-r border-slate-200 dark:border-slate-800/60 z-30">
         <div className="p-6">
           <h1 className="text-2xl font-bold text-green-600 dark:text-green-500">
-            GiaKế
+            Gia Kế
           </h1>
         </div>
 
@@ -152,8 +167,10 @@ export default function DashboardLayout({
               A
             </div>
             <div>
-              <div className="font-semibold text-sm">Nguyễn An</div>
-              <div className="text-xs text-slate-500">Chủ hộ</div>
+              <div className="font-semibold text-sm">{user.name}</div>
+              <div className="text-xs text-slate-500">
+                {user.role === "parent" ? "Chủ hộ" : "Thành viên"}
+              </div>
             </div>
           </div>
         </div>
@@ -197,6 +214,14 @@ export default function DashboardLayout({
         </div>
       </div>
 
+      {/* GLOBAL FAST ADD MODAL */}
+      <AddTransactionModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        categories={categories}
+        type="expense"
+      />
+
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 md:ml-64 flex flex-col pt-16 md:pt-0 pb-16 md:pb-0 h-full overflow-y-auto">
         {children}
@@ -231,7 +256,10 @@ export default function DashboardLayout({
           })}
 
         {/* Nút bấm ở Giữa: Dấu Cộng Nổi Bật Dùng Để Thêm Nhanh (Add) */}
-        <button className="flex items-center justify-center -mt-8 w-14 h-14 bg-green-500 text-white rounded-full shadow-lg shadow-green-500/30 hover:bg-green-600 transition-transform active:scale-95 z-30">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center justify-center -mt-8 w-14 h-14 bg-green-500 text-white rounded-full shadow-lg shadow-green-500/30 hover:bg-green-600 transition-transform active:scale-95 z-30"
+        >
           <Plus size={28} weight="bold" />
         </button>
 

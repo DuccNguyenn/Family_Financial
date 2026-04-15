@@ -140,7 +140,8 @@ export class ExpensesService {
 
     const updateData: any = {};
     if (dto.amount !== undefined) updateData.amount = dto.amount;
-    if (dto.categoryID) updateData.categoryID = new Types.ObjectId(dto.categoryID);
+    if (dto.categoryID)
+      updateData.categoryID = new Types.ObjectId(dto.categoryID);
     if (dto.date) updateData.date = new Date(dto.date);
     if (dto.description !== undefined) updateData.description = dto.description;
 
@@ -172,7 +173,7 @@ export class ExpensesService {
     return { message: 'Đã xóa khoản chi' };
   }
 
-  // Lấy tổng hợp doanh thu theo tháng 
+  // Lấy tổng hợp doanh thu theo tháng
   async getMonthlySummary(spaceID: string, month: number, year: number) {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
@@ -186,10 +187,11 @@ export class ExpensesService {
       },
       {
         $group: {
-          _id: '$categoryId',
+          _id: '$categoryID',
           totalAmount: { $sum: '$amount' },
           count: { $sum: 1 },
         },
+
       },
       {
         $lookup: {

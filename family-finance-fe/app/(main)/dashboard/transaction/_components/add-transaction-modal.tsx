@@ -118,7 +118,13 @@ export function AddTransactionModal({
       toast.success(editData ? "Cập nhật thành công" : "Thêm giao dịch thành công");
       if (!editData) form.reset();
       queryClient.invalidateQueries({ queryKey: ["transactions", type] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      // Sau khi tạo/cập nhật expense, budget cần tính lại spentAmount ngay
+      if (type === "expense") {
+        queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      }
       onOpenChange(false);
+
     },
     onError: () => {
       toast.error("Lỗi kết nối đến máy chủ");

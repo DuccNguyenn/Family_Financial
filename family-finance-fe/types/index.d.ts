@@ -77,3 +77,55 @@ export type IExpense = IIncome;
 export type CreateExpenseDto = CreateIncomeDto;
 export type GetExpenseDto = GetIncomeDto;
 export type ITransaction = IIncome;
+
+// ── Budget ──────────────────────────────────────────────────────────────────
+
+export interface IBudgetCategory {
+  _id: string;
+  name: string;
+  icon: string;
+  color?: string;
+}
+
+/** Response trả về từ GET /budget và POST /budget */
+export interface IBudget {
+  _id: string;
+  categoryId: IBudgetCategory;
+  month: number;
+  year: number;
+  // Chỉ parent thấy các field này
+  limitAmount?: number;
+  spentAmount?: number;
+  remaining?: number;
+  alertThresholds?: number[];
+  // Tất cả đều thấy
+  percentage: number;
+  status: "LOW" | "MEDIUM" | "HIGH" | "EXCEEDED";
+}
+
+export interface IBudgetListResponse {
+  month: number;
+  year: number;
+  budgets: IBudget[];
+  // Chỉ có khi role === 'parent'
+  summary?: {
+    totalLimit: number;
+    totalSpent: number;
+    totalRemaining: number;
+    percentage: number;
+  };
+}
+
+export interface CreateBudgetDto {
+  categoryId: string;
+  limitAmount: number;
+  month: number;
+  year: number;
+  alertThresholds?: number[];
+}
+
+export interface GetBudgetDto {
+  month?: number;
+  year?: number;
+}
+

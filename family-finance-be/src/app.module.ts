@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './Module/users/users.module';
-import { TransactionModule } from './Module/transaction/transaction.module';
 import { BudgetModule } from './Module/budget/budget.module';
 import { SpaceModule } from './Module/space/space.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -16,11 +15,11 @@ import { APP_GUARD } from '@nestjs/core';
 import { CategorisModule } from '@/Module/categoris/categoris.module';
 import { IncomesModule } from '@/Module/incomes/incomes.module';
 import { ExpensesModule } from '@/Module/expenses/expenses.module';
+import { DashboardModule } from './Module/dashboard/dashboard.module';
 
 @Module({
   imports: [
     UsersModule,
-    TransactionModule,
     BudgetModule,
     SpaceModule,
     ConfigModule.forRoot({
@@ -64,6 +63,7 @@ import { ExpensesModule } from '@/Module/expenses/expenses.module';
     CategorisModule,
     IncomesModule,
     ExpensesModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [
