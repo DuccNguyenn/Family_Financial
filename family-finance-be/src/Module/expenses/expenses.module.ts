@@ -9,14 +9,18 @@ import {
   Categoris,
   CategorisSchema,
 } from '@/Module/categoris/schema/categoris.schema';
+import { Budget, BudgetSchema } from '@/Module/budget/schema/budget.schema';
+import { NotificationModule } from '@/Module/notification/notification.module';
 
 @Module({
   imports: [
+    NotificationModule,
     MongooseModule.forFeature([
       { name: Expenses.name, schema: ExpensesSchema },
       { name: Categoris.name, schema: CategorisSchema },
       { name: Space.name, schema: SpaceSchema },
       { name: User.name, schema: UserSchema },
+      { name: Budget.name, schema: BudgetSchema },
     ]),
   ],
   controllers: [ExpensesController],

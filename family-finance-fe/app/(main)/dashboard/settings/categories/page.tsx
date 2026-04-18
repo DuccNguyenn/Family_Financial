@@ -62,7 +62,7 @@ export default function CategoriesPage() {
       setIsLoading(true);
       setIsError(false);
       const data = await getCategoriesAction();
-      if ((data as any).error) { 
+      if ((data as any).error) {
         setIsError(true);
       } else {
         setCategories(Array.isArray(data) ? data : []);

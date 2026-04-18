@@ -7,7 +7,11 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('summary')
-  getSummary(@GetUser('spaceId') spaceId: string) {
-    return this.dashboardService.getSummary(spaceId);
+  getSummary(@GetUser() user: any) {
+    return this.dashboardService.getSummary(
+      user?.spaceId,
+      user?._id?.toString(),
+      user?.role,
+    );
   }
 }

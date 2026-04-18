@@ -163,8 +163,16 @@ export default function DashboardLayout({
             className="flex items-center gap-3 cursor-pointer p-2 -m-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors select-none"
             onClick={() => setShowDropdown(!showDropdown)}
           >
-            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-700 dark:text-green-300 font-bold">
-              A
+            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-700 dark:text-green-300 font-bold overflow-hidden border border-slate-200 dark:border-slate-800">
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                user?.name?.charAt(0).toUpperCase() || "A"
+              )}
             </div>
             <div>
               <div className="font-semibold text-sm">{user.name}</div>
@@ -185,10 +193,18 @@ export default function DashboardLayout({
         {/* MOBILE DROPDOWN CONTAINER */}
         <div className="relative" ref={mobileRef}>
           <div
-            className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-700 dark:text-green-300 font-bold text-sm cursor-pointer border border-green-200 dark:border-green-800 active:scale-95 transition-transform"
+            className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-700 dark:text-green-300 font-bold text-sm cursor-pointer border border-green-200 dark:border-green-800 active:scale-95 transition-transform overflow-hidden"
             onClick={() => setShowMobileDropdown(!showMobileDropdown)}
           >
-            A
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt="Avatar"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              user?.name?.charAt(0).toUpperCase() || "A"
+            )}
           </div>
 
           {/* DROPDOWN MENU - MOBILE */}

@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateBudgetDto } from './create-budget.dto';
-import { IsArray, IsInt, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsArray, IsInt, IsNumber, IsOptional, Min, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateBudgetDto {
@@ -14,4 +14,8 @@ export class UpdateBudgetDto {
   @IsArray()
   @IsNumber({}, { each: true })
   alertThresholds?: number[];
+
+  @IsOptional()
+  @IsBoolean({ message: 'isAlertEnabled phải là kiểu boolean' })
+  isAlertEnabled?: boolean;
 }

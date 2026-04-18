@@ -30,6 +30,10 @@ export class Budget {
   @Prop({ type: [Number], default: [80, 100] })
   alertThresholds: number[];
 
+  // Trạng thái bật/tắt cảnh báo và chặn giao dịch
+  @Prop({ required: false, default: true })
+  isAlertEnabled: boolean;
+
   createdAt: Date;
   updatedAt: Date;
 }

@@ -145,7 +145,7 @@ export function AddTransactionModal({
       <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden rounded-2xl border-none">
         <DialogHeader className="p-6 pb-2 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/10">
           <DialogTitle className="text-xl font-bold text-slate-800 dark:text-white">
-            Thêm giao dịch mới
+            {editData ? "Cập nhật giao dịch" : "Thêm giao dịch mới"}
           </DialogTitle>
         </DialogHeader>
 
@@ -320,7 +320,7 @@ export function AddTransactionModal({
                 className={`text-white rounded-xl px-8 font-medium shadow-md ${type === 'expense' ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-500/20' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'}`}
                 disabled={mutation.isPending}
               >
-                {mutation.isPending ? "Đang lưu..." : "Lưu giao dịch"}
+                {mutation.isPending ? "Đang lưu..." : (editData ? "Cập nhật" : "Lưu giao dịch")}
               </Button>
             </DialogFooter>
           </form>

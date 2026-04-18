@@ -8,8 +8,19 @@ import {
   CreateCategoryDto,
   UpdateCategoryDto,
 } from "./category.api";
-import { IBackendRes, IIncome, GetIncomeDto, CreateIncomeDto, IExpense, GetExpenseDto, CreateExpenseDto, IBudget, IBudgetListResponse, CreateBudgetDto, GetBudgetDto } from "@/types";
-
+import {
+  IBackendRes,
+  IIncome,
+  GetIncomeDto,
+  CreateIncomeDto,
+  IExpense,
+  GetExpenseDto,
+  CreateExpenseDto,
+  IBudget,
+  IBudgetListResponse,
+  CreateBudgetDto,
+  GetBudgetDto,
+} from "@/types";
 
 const BE = process.env.NEXT_PUBLIC_BE_URL ?? "http://localhost:8081/api/";
 
@@ -195,14 +206,21 @@ export const getCategoriesAction = async (): Promise<
   ICategory[] | { error: string; message: string }
 > => {
   try {
-    const data = await sendRequestServer<
-      ICategory[] | { error: string; message: string }
-    >({
+    const res = await sendRequestServer<any>({
       url: `${BE}/categoris`,
       method: "GET",
       token: await getToken(),
     });
-    return data;
+    
+    if (res?.error) {
+      return { error: res.error, message: res.message };
+    }
+
+    if (Array.isArray(res)) return res;
+    if (res && Array.isArray(res.data)) return res.data;
+    if (res && Array.isArray(res.result)) return res.result;
+
+    return [];
   } catch (error: any) {
     return { error: "FetchError", message: error.message || "Failed to fetch" };
   }
@@ -273,9 +291,9 @@ export const getIncomesAction = async (
     });
     // Trả về data wrap để đồng nhất với IBackendRes
     return {
-        statusCode: 200,
-        message: "Success",
-        data: res // res contains { result, meta }
+      statusCode: 200,
+      message: "Success",
+      data: res, // res contains { result, meta }
     };
   } catch (error: any) {
     console.error("[Action Error] getIncomesAction:", error);
@@ -331,7 +349,9 @@ export const updateIncomeAction = async (
 };
 
 // Xoá giao dịch thu nhập
-export const deleteIncomeAction = async (id: string): Promise<IBackendRes<any>> => {
+export const deleteIncomeAction = async (
+  id: string,
+): Promise<IBackendRes<any>> => {
   try {
     const res = await sendRequestServer<IBackendRes<any>>({
       url: `${BE}/incomes/${id}`,
@@ -363,9 +383,9 @@ export const getExpensesAction = async (
       queryParams: query,
     });
     return {
-        statusCode: 200,
-        message: "Success",
-        data: res
+      statusCode: 200,
+      message: "Success",
+      data: res,
     };
   } catch (error: any) {
     console.error("[Action Error] getExpensesAction:", error);
@@ -421,7 +441,9 @@ export const updateExpenseAction = async (
 };
 
 // Xoá giao dịch chi phí
-export const deleteExpenseAction = async (id: string): Promise<IBackendRes<any>> => {
+export const deleteExpenseAction = async (
+  id: string,
+): Promise<IBackendRes<any>> => {
   try {
     const res = await sendRequestServer<IBackendRes<any>>({
       url: `${BE}/expenses/${id}`,
@@ -443,7 +465,7 @@ export const deleteExpenseAction = async (id: string): Promise<IBackendRes<any>>
 // Đổi quyền thành viên
 export const changeMemberRoleAction = async (
   memberId: string,
-  role: "parent" | "member"
+  role: "parent" | "member",
 ): Promise<IBackendRes<any>> => {
   try {
     const res = await sendRequestServer<IBackendRes<any>>({
@@ -463,7 +485,9 @@ export const changeMemberRoleAction = async (
 };
 
 // Xoá thành viên khỏi không gian
-export const removeMemberAction = async (memberId: string): Promise<IBackendRes<any>> => {
+export const removeMemberAction = async (
+  memberId: string,
+): Promise<IBackendRes<any>> => {
   try {
     const res = await sendRequestServer<IBackendRes<any>>({
       url: `${BE}/space/me/members/${memberId}`,
@@ -496,7 +520,10 @@ export const getBudgetsAction = async (
     return { statusCode: 200, message: "Success", data: res };
   } catch (error: any) {
     console.error("[Action Error] getBudgetsAction:", error);
-    return { statusCode: 500, message: error.message || "Lỗi khi lấy ngân sách" };
+    return {
+      statusCode: 500,
+      message: error.message || "Lỗi khi lấy ngân sách",
+    };
   }
 };
 
@@ -513,7 +540,10 @@ export const getBudgetAction = async (
     return { statusCode: 200, message: "Success", data: res };
   } catch (error: any) {
     console.error("[Action Error] getBudgetAction:", error);
-    return { statusCode: 500, message: error.message || "Lỗi khi lấy chi tiết ngân sách" };
+    return {
+      statusCode: 500,
+      message: error.message || "Lỗi khi lấy chi tiết ngân sách",
+    };
   }
 };
 
@@ -531,7 +561,10 @@ export const createBudgetAction = async (
     return { statusCode: 200, message: "Success", data: res };
   } catch (error: any) {
     console.error("[Action Error] createBudgetAction:", error);
-    return { statusCode: 500, message: error.message || "Lỗi khi tạo ngân sách" };
+    return {
+      statusCode: 500,
+      message: error.message || "Lỗi khi tạo ngân sách",
+    };
   }
 };
 
@@ -550,7 +583,10 @@ export const updateBudgetAction = async (
     return { statusCode: 200, message: "Success", data: res };
   } catch (error: any) {
     console.error("[Action Error] updateBudgetAction:", error);
-    return { statusCode: 500, message: error.message || "Lỗi khi cập nhật ngân sách" };
+    return {
+      statusCode: 500,
+      message: error.message || "Lỗi khi cập nhật ngân sách",
+    };
   }
 };
 
@@ -567,12 +603,17 @@ export const deleteBudgetAction = async (
     return { statusCode: 200, message: "Success", data: res };
   } catch (error: any) {
     console.error("[Action Error] deleteBudgetAction:", error);
-    return { statusCode: 500, message: error.message || "Lỗi khi xóa ngân sách" };
+    return {
+      statusCode: 500,
+      message: error.message || "Lỗi khi xóa ngân sách",
+    };
   }
 };
 
 // --- Dashboard ---
-export const getDashboardSummaryAction = async (): Promise<IBackendRes<any>> => {
+export const getDashboardSummaryAction = async (): Promise<
+  IBackendRes<any>
+> => {
   try {
     const res = await sendRequestServer<any>({
       url: `${BE}/dashboard/summary`,
@@ -582,7 +623,9 @@ export const getDashboardSummaryAction = async (): Promise<IBackendRes<any>> => 
     return { statusCode: 200, message: "Success", data: res };
   } catch (error: any) {
     console.error("[Action Error] getDashboardSummaryAction:", error);
-    return { statusCode: 500, message: error.message || "Lỗi khi lấy dữ liệu tổng hợp" };
+    return {
+      statusCode: 500,
+      message: error.message || "Lỗi khi lấy dữ liệu tổng hợp",
+    };
   }
 };
-

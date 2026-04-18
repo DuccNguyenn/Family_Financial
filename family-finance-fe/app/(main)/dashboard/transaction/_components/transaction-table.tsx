@@ -78,7 +78,7 @@ export function TransactionTable({
             <TableRow>
               <TableHead className="w-[150px]">Ngày</TableHead>
               <TableHead>Danh mục</TableHead>
-              <TableHead>Ví sử dụng</TableHead>
+              <TableHead>Người tạo / Ví</TableHead>
               <TableHead className="text-right">Số tiền</TableHead>
               <TableHead className="w-[100px] text-center">Thao tác</TableHead>
             </TableRow>
@@ -124,9 +124,23 @@ export function TransactionTable({
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none font-medium text-[11px] rounded-lg">
-                          Ví chung
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          {item.userID?.avatar ? (
+                            <img src={item.userID.avatar} alt="avatar" className="w-5 h-5 rounded-full object-cover shadow-sm" />
+                          ) : (
+                            <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 flex flex-col items-center justify-center font-bold text-[10px]">
+                              {item.userID?.name?.charAt(0).toUpperCase() || '?'}
+                            </div>
+                          )}
+                          <div className="flex flex-col">
+                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                              {item.userID?.name || 'Thành viên'}
+                            </span>
+                            <Badge variant="secondary" className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none font-medium text-[9px] rounded-md px-1.5 py-0 mt-0.5 w-fit">
+                              Ví chung
+                            </Badge>
+                          </div>
+                        </div>
                       </TableCell>
                       <TableCell className={`text-right font-bold ${isIncome ? 'text-green-600 dark:text-green-500' : 'text-rose-600 dark:text-rose-500'}`}>
                         {isIncome ? '+' : '-'} {formatAmount(item.amount)}
@@ -201,14 +215,25 @@ export function TransactionTable({
                         <span className="font-bold text-slate-800 dark:text-slate-200 text-sm truncate">
                           {item.categoryID.name}
                         </span>
-                        <div className="flex items-center gap-1.5 mt-0.5">
+                        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                           <span className="text-xs text-slate-500">
                             {format(new Date(item.date), "HH:mm")}
                           </span>
+                          <span className="text-xs text-slate-300">•</span>
+                          <div className="flex items-center gap-1 text-xs text-slate-500">
+                            {item.userID?.avatar ? (
+                              <img src={item.userID.avatar} alt="avatar" className="w-3.5 h-3.5 rounded-full object-cover" />
+                            ) : (
+                              <div className="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-[8px]">
+                                {item.userID?.name?.charAt(0).toUpperCase() || '?'}
+                              </div>
+                            )}
+                            <span className="truncate max-w-[80px]">{item.userID?.name || 'Thành viên'}</span>
+                          </div>
                           {item.description && (
                             <>
                               <span className="text-xs text-slate-300">•</span>
-                              <span className="text-xs text-slate-500 truncate line-clamp-1">{item.description}</span>
+                              <span className="text-xs text-slate-500 truncate line-clamp-1 max-w-[120px]">{item.description}</span>
                             </>
                           )}
                         </div>

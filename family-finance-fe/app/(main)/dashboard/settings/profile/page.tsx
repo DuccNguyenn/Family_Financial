@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CaretLeft, Camera } from "@phosphor-icons/react";
+import { CaretLeft, Camera, User } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth.store";
 import { updateProfileAction } from "@/lib/action";
+import Image from "next/image";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,11 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 export default function ProfilePage() {
   const router = useRouter();
   const { user, setUser } = useAuthStore();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isAvatarDirty, setIsAvatarDirty] = useState(false);
 
   const {
     register,
@@ -46,21 +52,53 @@ export default function ProfilePage() {
         name: (user as any)?.name || (user as any)?.fullName || "",
         email: (user as any)?.email || "",
       });
+      if ((user as any)?.avatar) {
+        setPreviewUrl((user as any).avatar);
+      }
     }
   }, [user, reset]);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("File quá lớn", {
+          description: "Vui lòng chọn ảnh có kích thước dưới 2MB.",
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setAvatarBase64(base64String);
+        setPreviewUrl(base64String);
+        setIsAvatarDirty(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
       // Call the real API Server Action
       const res = await updateProfileAction({
         name: data.name,
-        avatar: (user as any)?.avatar || "", 
+        avatar: avatarBase64 || (user as any)?.avatar || "", 
       });
 
       // Handle typical backend response objects
       if (res?.statusCode === 200 || res?.statusCode === 201 || !res?.error) {
         // Update local store payload safely
-        setUser({ name: data.name } as any);
+        setUser({ 
+          ...user, 
+          name: data.name,
+          avatar: avatarBase64 || (user as any)?.avatar
+        } as any);
         
         toast.success("Cập nhật thành công!", {
           description: "Thông tin cá nhân của bạn đã được cập nhật.",
@@ -105,15 +143,32 @@ export default function ProfilePage() {
         
         {/* Avatar Section */}
         <div className="flex flex-col items-center mb-10">
-          <div className="relative group cursor-pointer">
-            <div className="w-24 h-24 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-700 dark:text-green-300 font-bold text-4xl border-4 border-white dark:border-[#122017] shadow-md transition-transform duration-300 group-hover:scale-105">
-              {initialLetter}
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            accept="image/*" 
+            className="hidden" 
+          />
+          <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
+            <div className="w-32 h-32 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-700 dark:text-green-300 font-bold text-4xl border-4 border-white dark:border-[#122017] shadow-md transition-transform duration-300 group-hover:scale-105 overflow-hidden">
+              {previewUrl ? (
+                <img 
+                  src={previewUrl} 
+                  alt="Avatar Preview" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                initialLetter
+              )}
             </div>
-            <div className="absolute bottom-0 right-0 w-8 h-8 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-full flex items-center justify-center border-2 border-white dark:border-[#122017] shadow-sm group-hover:bg-green-600 dark:group-hover:bg-green-500 transition-colors">
-              <Camera size={14} weight="fill" />
+            <div className="absolute bottom-1 right-1 w-10 h-10 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-full flex items-center justify-center border-4 border-white dark:border-[#122017] shadow-sm group-hover:bg-green-600 dark:group-hover:bg-green-500 transition-colors">
+              <Camera size={18} weight="fill" />
             </div>
           </div>
-          <span className="text-xs font-medium text-slate-400 mt-3 uppercase tracking-wider">Chọn ảnh đại diện</span>
+          <span className="text-xs font-bold text-slate-400 mt-4 uppercase tracking-[0.2em] group-hover:text-green-500 transition-colors">
+            Thay đổi ảnh
+          </span>
         </div>
 
         {/* Form Section */}
@@ -158,7 +213,7 @@ export default function ProfilePage() {
             </Button>
             <Button 
               type="submit" 
-              disabled={isSubmitting || !isDirty}
+              disabled={isSubmitting || (!isDirty && !isAvatarDirty)}
               className="flex-1 h-12 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50"
             >
               {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}

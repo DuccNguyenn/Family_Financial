@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cảnh báo Ngân sách</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f7f6;
+        color: #333;
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+      }
+      .header {
+        background-color: #fca5a5;
+        color: #7f1d1d;
+        padding: 20px;
+        text-align: center;
+        border-bottom: 3px solid #ef4444;
+      }
+      .header h2 {
+        margin: 0;
+        font-size: 24px;
+      }
+      .content {
+        padding: 30px;
+      }
+      .content p {
+        margin: 0 0 15px;
+      }
+      .alert-box {
+        background-color: #fee2e2;
+        border: 1px solid #f87171;
+        border-radius: 6px;
+        padding: 20px;
+        text-align: center;
+        margin: 25px 0;
+      }
+      .alert-box .progress-text {
+        font-size: 28px;
+        font-weight: bold;
+        color: #b91c1c;
+        margin-bottom: 5px;
+      }
+      .alert-box .details {
+        font-size: 14px;
+        color: #991b1b;
+      }
+      .btn-container {
+        text-align: center;
+        margin-top: 30px;
+      }
+      .btn {
+        display: inline-block;
+        padding: 12px 24px;
+        background-color: #ef4444;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+      .footer {
+        background-color: #f8fafc;
+        padding: 15px;
+        text-align: center;
+        font-size: 12px;
+        color: #64748b;
+        border-top: 1px solid #e2e8f0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>⚠️ Cảnh Báo Ngân Sách</h2>
+      </div>
+      <div class="content">
+        <p>Xin chào bạn,</p>
+        <p>
+          Hệ thống phát hiện danh mục <strong>{{categoryName}}</strong> trong tháng này của Phòng (Space) <strong>{{spaceName}}</strong> đã chạm ngưỡng giới hạn ngân sách.
+        </p>
+
+        <div class="alert-box">
+          <div class="progress-text">Đã tiêu thụ: {{percentage}}%</div>
+          <div class="details">
+            Đã chi: {{spentAmount}} VNĐ / Giới hạn: {{limitAmount}} VNĐ
+          </div>
+        </div>
+
+        <p>
+          Xin lưu ý nếu mức chi tiêu vượt quá 100%, hệ thống sẽ tự động chặn việc thêm giao dịch mới có cùng danh mục trong tháng này.
+        </p>
+
+        <div class="btn-container">
+          <a href="{{appUrl}}/dashboard" class="btn">Xem chi tiết trên Ứng dụng</a>
+        </div>
+      </div>
+      <div class="footer">
+        Đội ngũ Family Financial Management<br />
+        Đây là email tự động, vui lòng không phản hồi.
+      </div>
+    </div>
+  </body>
+</html>

@@ -16,6 +16,7 @@ import { CategorisModule } from '@/Module/categoris/categoris.module';
 import { IncomesModule } from '@/Module/incomes/incomes.module';
 import { ExpensesModule } from '@/Module/expenses/expenses.module';
 import { DashboardModule } from './Module/dashboard/dashboard.module';
+import { NotificationModule } from './Module/notification/notification.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { DashboardModule } from './Module/dashboard/dashboard.module';
     IncomesModule,
     ExpensesModule,
     DashboardModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,4 +1,4 @@
-// Response từ NestJS 
+// Response từ NestJS
 export interface IBackendRes<T = any> {
   statusCode?: number;
   message?: string | string[];
@@ -10,7 +10,7 @@ export interface IBackendRes<T = any> {
   _id?: string;
 }
 
-// User 
+// User
 export interface IUser {
   _id: string;
   name: string;
@@ -22,7 +22,7 @@ export interface IUser {
   accountId: string;
 }
 
-// sendRequest options 
+// sendRequest options
 export interface IRequest {
   url: string;
   method: "GET" | "POST" | "PATCH" | "DELETE";
@@ -128,4 +128,3 @@ export interface GetBudgetDto {
   month?: number;
   year?: number;
 }
-

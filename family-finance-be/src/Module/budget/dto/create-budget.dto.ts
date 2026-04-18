@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsArray,
   IsNumber,
+  IsBoolean,
   Min,
   Max,
   ArrayMinSize,
@@ -36,4 +37,8 @@ export class CreateBudgetDto {
   @ArrayMaxSize(3)
   @IsNumber({}, { each: true })
   alertThresholds?: number[]; // mặc định [80, 100]
+
+  @IsOptional()
+  @IsBoolean({ message: 'isAlertEnabled phải là kiểu boolean' })
+  isAlertEnabled?: boolean;
 }

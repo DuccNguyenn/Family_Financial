@@ -3,16 +3,25 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Incomes } from '@/Module/incomes/schema/income.schema';
 import { Expenses } from '@/Module/expenses/schema/expense.schema';
+import { Budget } from '@/Module/budget/schema/budget.schema';
 
 @Injectable()
 export class DashboardService {
   constructor(
     @InjectModel(Incomes.name) private readonly incomesModel: Model<Incomes>,
     @InjectModel(Expenses.name) private readonly expensesModel: Model<Expenses>,
+    @InjectModel(Budget.name) private readonly budgetModel: Model<Budget>,
   ) {}
 
-  async getSummary(spaceId: string) {
+  async getSummary(spaceId: string, userId?: string, role?: string) {
     const spaceObjectId = new Types.ObjectId(spaceId);
+
+    // Apply strict filtering so members only see their own numbers
+    const additionalMatch: any = {};
+    if (role === 'member' && userId) {
+      additionalMatch.userID = new Types.ObjectId(userId);
+    }
+
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
@@ -23,11 +32,11 @@ export class DashboardService {
     // 1. Total All-time Incomes & Expenses
     const [allIncomes, allExpenses] = await Promise.all([
       this.incomesModel.aggregate([
-        { $match: { spaceID: spaceObjectId } },
+        { $match: { spaceID: spaceObjectId, ...additionalMatch } },
         { $group: { _id: null, total: { $sum: '$amount' } } },
       ]),
       this.expensesModel.aggregate([
-        { $match: { spaceID: spaceObjectId } },
+        { $match: { spaceID: spaceObjectId, ...additionalMatch } },
         { $group: { _id: null, total: { $sum: '$amount' } } },
       ]),
     ]);
@@ -43,6 +52,7 @@ export class DashboardService {
           $match: {
             spaceID: spaceObjectId,
             date: { $gte: startOfMonth, $lte: endOfMonth },
+            ...additionalMatch,
           },
         },
         { $group: { _id: null, total: { $sum: '$amount' } } },
@@ -52,6 +62,7 @@ export class DashboardService {
           $match: {
             spaceID: spaceObjectId,
             date: { $gte: startOfMonth, $lte: endOfMonth },
+            ...additionalMatch,
           },
         },
         { $group: { _id: null, total: { $sum: '$amount' } } },
@@ -67,6 +78,7 @@ export class DashboardService {
         $match: {
           spaceID: spaceObjectId,
           date: { $gte: startOfMonth, $lte: endOfMonth },
+          ...additionalMatch,
         },
       },
       { $group: { _id: '$categoryID', totalAmount: { $sum: '$amount' } } },
@@ -95,16 +107,18 @@ export class DashboardService {
     // 4. Recent Transactions (latest 10 combined)
     const [recentIncomes, recentExpenses] = await Promise.all([
       this.incomesModel
-        .find({ spaceID: spaceObjectId })
+        .find({ spaceID: spaceObjectId, ...additionalMatch })
         .sort({ date: -1, createdAt: -1 })
         .limit(10)
         .populate('categoryID', 'name icon color')
+        .populate('userID', 'name avatar')
         .lean(),
       this.expensesModel
-        .find({ spaceID: spaceObjectId })
+        .find({ spaceID: spaceObjectId, ...additionalMatch })
         .sort({ date: -1, createdAt: -1 })
         .limit(10)
         .populate('categoryID', 'name icon color')
+        .populate('userID', 'name avatar')
         .lean(),
     ]);
 
@@ -127,6 +141,7 @@ export class DashboardService {
           $match: {
             spaceID: spaceObjectId,
             date: { $gte: trendStart, $lte: endOfMonth },
+            ...additionalMatch,
           },
         },
         {
@@ -141,6 +156,7 @@ export class DashboardService {
           $match: {
             spaceID: spaceObjectId,
             date: { $gte: trendStart, $lte: endOfMonth },
+            ...additionalMatch,
           },
         },
         {
@@ -173,6 +189,49 @@ export class DashboardService {
       });
     }
 
+    // 6. Alert Budgets (Budgets >= threshold) - Members shouldn't process or see global alerts
+    const alertBudgets: any[] = [];
+    if (role !== 'member') {
+      const activeBudgets = await this.budgetModel
+        .find({
+          spaceId: spaceObjectId,
+          month,
+          year,
+          isAlertEnabled: { $ne: false },
+        })
+        .populate('categoryId', 'name icon color')
+        .lean();
+
+      for (const budget of activeBudgets) {
+        const expensesForBudget = await this.expensesModel.aggregate([
+          {
+            $match: {
+              spaceID: spaceObjectId,
+              categoryID: new Types.ObjectId(
+                (budget.categoryId as any)?._id ?? budget.categoryId,
+              ),
+              date: { $gte: startOfMonth, $lte: endOfMonth },
+            },
+          },
+          { $group: { _id: null, total: { $sum: '$amount' } } },
+        ]);
+        const spentAmount = expensesForBudget[0]?.total ?? 0;
+        const percentage =
+          budget.limitAmount > 0 ? (spentAmount / budget.limitAmount) * 100 : 0;
+        const threshold = budget.alertThresholds?.[0] || 80;
+
+        if (percentage >= threshold) {
+          alertBudgets.push({
+            categoryId: budget.categoryId,
+            limitAmount: budget.limitAmount,
+            spentAmount,
+            percentage: Math.round(percentage),
+            threshold,
+          });
+        }
+      }
+    }
+
     return {
       totalBalance,
       monthIncome,
@@ -180,6 +239,7 @@ export class DashboardService {
       categoryAllocation,
       recentTransactions,
       trend,
+      alertBudgets,
     };
   }
 }

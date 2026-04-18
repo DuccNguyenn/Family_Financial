@@ -76,6 +76,7 @@ export class BudgetService {
         year: budget.year,
         percentage,
         status,
+        isAlertEnabled: budget.isAlertEnabled !== false,
       };
     }
 
@@ -91,6 +92,7 @@ export class BudgetService {
       percentage,
       status,
       alertThresholds: budget.alertThresholds,
+      isAlertEnabled: budget.isAlertEnabled !== false,
     };
   }
 
@@ -120,6 +122,7 @@ export class BudgetService {
       month: dto.month,
       year: dto.year,
       alertThresholds: dto.alertThresholds ?? [80, 100],
+      isAlertEnabled: dto.isAlertEnabled ?? true,
     });
 
     // Tính spentAmount ngay sau khi tạo
@@ -324,7 +327,7 @@ export class BudgetService {
       (threshold) => percentage >= threshold,
     );
 
-    if (!isAlerted) return null;
+    if (!isAlerted || budget.isAlertEnabled === false) return null;
 
     return {
       categoryId: budget.categoryId,

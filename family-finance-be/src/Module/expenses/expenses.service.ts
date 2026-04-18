@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -9,14 +10,102 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Expenses } from './schema/expense.schema';
 import { Model, Types } from 'mongoose';
 import { GetExpensesDto } from '@/Module/expenses/dto/get-expense.dto';
+import { Budget } from '@/Module/budget/schema/budget.schema';
+import { Categoris } from '@/Module/categoris/schema/categoris.schema';
+import { NotificationService } from '@/Module/notification/notification.service';
 
 @Injectable()
 export class ExpensesService {
   constructor(
     @InjectModel(Expenses.name) private readonly expensesModel: Model<Expenses>,
+    @InjectModel(Budget.name) private readonly budgetModel: Model<Budget>,
+    @InjectModel(Categoris.name)
+    private readonly categoryModel: Model<Categoris>,
+    private readonly notificationService: NotificationService,
   ) {}
+
+  private async checkBudgetAndAlert(
+    spaceID: string,
+    categoryID: string,
+    amount: number,
+    dateInput: string | Date,
+    expenseIdToIgnore?: string,
+  ) {
+    const date = new Date(dateInput);
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+
+    // Tìm budget cho category này trong tháng
+    const budget = await this.budgetModel.findOne({
+      spaceId: new Types.ObjectId(spaceID),
+      categoryId: new Types.ObjectId(categoryID),
+      month,
+      year,
+    });
+
+    if (!budget) return; // Không có budget thì không chặn
+
+    if (budget.isAlertEnabled === false) return; // Không chặn nếu người dùng đã tắt cảnh báo
+
+    // Tính tổng số tiền đã chi
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+
+    const matchQuery: any = {
+      spaceID: new Types.ObjectId(spaceID),
+      categoryID: new Types.ObjectId(categoryID),
+      date: { $gte: startDate, $lte: endDate },
+    };
+
+    if (expenseIdToIgnore) {
+      matchQuery._id = { $ne: new Types.ObjectId(expenseIdToIgnore) };
+    }
+
+    const currentSpentResult = await this.expensesModel.aggregate([
+      { $match: matchQuery },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]);
+
+    const currentSpent = currentSpentResult[0]?.total ?? 0;
+    const projectedTotal = currentSpent + amount;
+    const limitAmount = budget.limitAmount;
+
+    const percentage = (projectedTotal / limitAmount) * 100;
+
+    // Chặn cứng > 100%
+    if (percentage > 100) {
+      throw new BadRequestException(
+        'Giao dịch này làm vượt quá 100% ngân sách đã thiết lập.',
+      );
+    }
+
+    // Cảnh báo >= threshold
+    const warningThreshold = budget.alertThresholds?.[0] || 80;
+
+    if (percentage >= warningThreshold && percentage <= 100) {
+      const category = await this.categoryModel.findById(categoryID).lean();
+      const catName = category ? category.name : 'Không xác định';
+
+      this.notificationService.triggerBudgetAlert(
+        spaceID,
+        catName,
+        percentage,
+        projectedTotal,
+        limitAmount,
+      );
+    }
+  }
+
   // POST/expenses
   async createExpense(dto: CreateExpenseDto, userID: string, spaceID: string) {
+    // Check budget limit first
+    await this.checkBudgetAndAlert(
+      spaceID,
+      String(dto.categoryID),
+      dto.amount,
+      dto.date,
+    );
+
     const expenses = await this.expensesModel.create({
       spaceID: new Types.ObjectId(spaceID),
       userID: new Types.ObjectId(userID),
@@ -139,11 +228,32 @@ export class ExpensesService {
     }
 
     const updateData: any = {};
-    if (dto.amount !== undefined) updateData.amount = dto.amount;
-    if (dto.categoryID)
+    let amountToCheck = expense.amount;
+    let categoryToCheck = expense.categoryID.toString();
+    let dateToCheck = expense.date;
+
+    if (dto.amount !== undefined) {
+      updateData.amount = dto.amount;
+      amountToCheck = dto.amount;
+    }
+    if (dto.categoryID) {
       updateData.categoryID = new Types.ObjectId(dto.categoryID);
-    if (dto.date) updateData.date = new Date(dto.date);
+      categoryToCheck = dto.categoryID;
+    }
+    if (dto.date) {
+      updateData.date = new Date(dto.date);
+      dateToCheck = new Date(dto.date);
+    }
     if (dto.description !== undefined) updateData.description = dto.description;
+
+    // Check budget limit before updating
+    await this.checkBudgetAndAlert(
+      spaceID,
+      categoryToCheck,
+      amountToCheck,
+      dateToCheck,
+      id,
+    );
 
     return this.expensesModel
       .findByIdAndUpdate(id, updateData, { new: true })
@@ -191,7 +301,6 @@ export class ExpensesService {
           totalAmount: { $sum: '$amount' },
           count: { $sum: 1 },
         },
-
       },
       {
         $lookup: {
