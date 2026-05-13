@@ -40,29 +40,48 @@ import { GoalsModule } from './Module/goals/goals.module';
     }),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        transport: {
-          host: 'smtp.gmail.com',
-          port: 587,
-          secure: false, // false for 587 (uses STARTTLS)
-          family: 4, // Force IPv4 to avoid ENETUNREACH on Render
-          auth: {
-            user: configService.get<string>('MAIL_USER'),
-            pass: configService.get<string>('MAIL_PASS'),
+      useFactory: async (configService: ConfigService) => {
+        const resendApiKey = configService.get<string>('RESEND_API_KEY');
+
+        // Production: dùng Resend HTTP API (bypass SMTP blocking trên Render)
+        if (resendApiKey) {
+          const { createResendTransport } =
+            await import('./mail/resend.transport');
+          return {
+            transport: createResendTransport(resendApiKey) as any,
+            defaults: {
+              from: '"Gia Kế" <onboarding@resend.dev>',
+            },
+            template: {
+              dir: process.cwd() + '/src/mail/templates/',
+              adapter: new HandlebarsAdapter(),
+              options: { strict: true },
+            },
+          };
+        }
+
+        // Local dev: dùng Gmail SMTP bình thường
+        return {
+          transport: {
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false,
+            family: 4,
+            auth: {
+              user: configService.get<string>('MAIL_USER'),
+              pass: configService.get<string>('MAIL_PASS'),
+            },
           },
-        },
-        defaults: {
-          from: '"Gia Kế" <no-reply@localhost>',
-        },
-        // preview: true,
-        template: {
-          dir: process.cwd() + '/src/mail/templates/',
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
+          defaults: {
+            from: '"Gia Kế" <no-reply@localhost>',
           },
-        },
-      }),
+          template: {
+            dir: process.cwd() + '/src/mail/templates/',
+            adapter: new HandlebarsAdapter(),
+            options: { strict: true },
+          },
+        };
+      },
       inject: [ConfigService],
     }),
     AuthsModule,
