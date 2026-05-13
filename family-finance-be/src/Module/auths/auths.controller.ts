@@ -13,7 +13,9 @@ import { Public } from '@/decorator/customize';
 import { AuthsService } from '@/Module/auths/auths.service';
 import {
   CreateAuthDto,
+  ForgotPasswordDto,
   ResendCodeDto,
+  ResetPasswordDto,
   VerifyAccountDto,
 } from '@/Module/auths/dto/create-auth.dto';
 
@@ -60,4 +62,23 @@ export class AuthsController {
   resendCode(@Body() dto: ResendCodeDto) {
     return this.authsService.resendVerifyCode(dto);
   }
+
+  // ── POST /auths/forgot-password ────────────────────────
+  // Gửi mã OTP 6 số về email để đặt lại mật khẩu
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authsService.forgotPassword(dto);
+  }
+
+  // ── POST /auths/reset-password ─────────────────────────
+  // Xác thực mã OTP + đặt mật khẩu mới
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authsService.resetPassword(dto);
+  }
 }
+
