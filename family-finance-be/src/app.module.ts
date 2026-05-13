@@ -45,7 +45,8 @@ import { createBrevoTransport } from './mail/brevo.transport';
       useFactory: async (configService: ConfigService) => {
         const brevoApiKey = configService.get<string>('BREVO_API_KEY');
         const resendApiKey = configService.get<string>('RESEND_API_KEY');
-        const mailUser = configService.get<string>('MAIL_USER') || 'noreply@giake.app';
+        const mailUser =
+          configService.get<string>('MAIL_USER') || 'noreply@giake.app';
 
         const templateConfig = {
           dir: process.cwd() + '/src/mail/templates/',
@@ -57,7 +58,7 @@ import { createBrevoTransport } from './mail/brevo.transport';
         if (brevoApiKey) {
           console.log('[Mail] Using Brevo HTTP API transport');
           return {
-            transport: createBrevoTransport(brevoApiKey) as any,
+            transport: createBrevoTransport(brevoApiKey, mailUser) as any,
             defaults: { from: `"Gia Kế" <${mailUser}>` },
             template: templateConfig,
           };

@@ -3,8 +3,10 @@
  * This bypasses SMTP port blocking on platforms like Render free tier.
  *
  * Brevo free tier: 300 emails/day, no domain verification needed.
+ * @param apiKey - Brevo API key
+ * @param verifiedEmail - The sender email verified on Brevo dashboard
  */
-export function createBrevoTransport(apiKey: string) {
+export function createBrevoTransport(apiKey: string, verifiedEmail: string) {
   return {
     name: 'brevo',
     version: '1.0.0',
@@ -14,18 +16,16 @@ export function createBrevoTransport(apiKey: string) {
     ) {
       const { from, to, subject, html, text } = mail.data;
 
-      // Normalize "from" field
-      let senderEmail: string;
-      let senderName: string;
+      // Luôn dùng email đã verify trên Brevo làm sender
+      const senderEmail = verifiedEmail;
+      let senderName = 'Gia Kế';
+
+      // Lấy tên từ "from" nếu có
       if (typeof from === 'string') {
-        senderEmail = from;
-        senderName = 'Gia Kế';
-      } else if (from?.address) {
-        senderEmail = from.address;
-        senderName = from.name || 'Gia Kế';
-      } else {
-        senderEmail = 'noreply@giake.app';
-        senderName = 'Gia Kế';
+        const match = from.match(/"?([^"<]*)"?\s*</);
+        if (match) senderName = match[1].trim();
+      } else if (from?.name) {
+        senderName = from.name;
       }
 
       // Normalize "to" field — Brevo expects [{email, name}]
@@ -35,6 +35,10 @@ export function createBrevoTransport(apiKey: string) {
         if (typeof t === 'string') return { email: t };
         return { email: t.address || t.email || t, name: t.name };
       });
+
+      console.log(
+        `[Brevo] Sending email from: ${senderName} <${senderEmail}> to: ${toArr.map((t) => t.email).join(', ')}`,
+      );
 
       fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
